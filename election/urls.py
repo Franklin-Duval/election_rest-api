@@ -32,5 +32,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include(routers.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url('auth-login/', views.login),
     url(r'^[a-zA-Z0-9/,;:!\\*-+^$ù&é(-è_çà)]+/$', views.errorPage)
+    
 ]

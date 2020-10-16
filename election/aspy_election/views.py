@@ -34,16 +34,17 @@ class CandidateViewSet(viewsets.ModelViewSet):
 
         department = Department.objects.get(pk=idDept)
         department.number = department.number + 1
-        department.save()
         post = Post.objects.get(pk=idPost)
         post.numberCandidate = post.numberCandidate + 1
-        post.save()
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         meta["status"] = "SUCCESS"
         meta["result"] = serializer.data
+
+        department.save()
+        post.save()
 
         headers = self.get_success_headers(serializer.data)
         return Response(meta, status=status.HTTP_201_CREATED, headers=headers)
@@ -54,13 +55,15 @@ class CandidateViewSet(viewsets.ModelViewSet):
         
         department = Department.objects.get(pk=instance.department.id)
         department.number = department.number - 1
-        department.save()
         post = Post.objects.get(pk=instance.post.id)
         post.numberCandidate = post.numberCandidate - 1
-        post.save()
 
         self.perform_destroy(instance)
         meta["status"] = "SUCCESS"
+        
+        department.save()
+        post.save()
+
         return Response(meta, status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, *args, **kwargs):
@@ -75,7 +78,13 @@ class CandidateViewSet(viewsets.ModelViewSet):
         idPost = request.data["post"]
         idPost = idPost[idPost.find("post")+4: ]
         idPost = int(idPost.replace("/", ""))
-
+        
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        meta["status"] = "SUCCESS"
+        meta["result"] = serializer.data
+        
         if (idDept != instance.department.id):
             oldDepartment = Department.objects.get(pk=instance.department.id)
             newDepartment = Department.objects.get(pk=idDept)
@@ -93,12 +102,7 @@ class CandidateViewSet(viewsets.ModelViewSet):
             newPost.number = newPost.number + 1
             oldPost.save()
             newPost.save()
-        
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        meta["status"] = "SUCCESS"
-        meta["result"] = serializer.data
+
         return Response(meta)
     
 class VoteViewSet(viewsets.ModelViewSet):
@@ -114,13 +118,14 @@ class VoteViewSet(viewsets.ModelViewSet):
 
         candidate = Candidate.objects.get(pk=idCand)
         candidate.numberVotes = candidate.numberVotes + 1
-        candidate.save()
-
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         meta["status"] = "SUCCESS"
         meta["result"] = serializer.data
+
+        candidate.save()
         headers = self.get_success_headers(serializer.data)
         return Response(meta, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -138,7 +143,7 @@ class VoterViewSet(viewsets.ModelViewSet):
         idDept = int(idDept.replace("/", ""))
         department = Department.objects.get(pk=idDept)
         department.number = department.number + 1
-        department.save()
+        
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -146,6 +151,7 @@ class VoterViewSet(viewsets.ModelViewSet):
         meta["status"] = "SUCCESS"
         meta["result"] = serializer.data
 
+        department.save()
         headers = self.get_success_headers(serializer.data)
         return Response(meta, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -160,6 +166,8 @@ class VoterViewSet(viewsets.ModelViewSet):
 
         self.perform_destroy(instance)
         meta["status"] = "SUCCESS"
+
+        department.save()
         return Response(meta, status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, *args, **kwargs):
@@ -171,6 +179,12 @@ class VoterViewSet(viewsets.ModelViewSet):
         idDept = idDept[idDept.find("department")+11: ]
         idDept = int(idDept.replace("/", ""))
 
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        meta["status"] = "SUCCESS"
+        meta["result"] = serializer.data
+
         if (idDept != instance.department.id):
             oldDepartment = Department.objects.get(pk=instance.department.id)
             newDepartment = Department.objects.get(pk=idDept)
@@ -180,11 +194,6 @@ class VoterViewSet(viewsets.ModelViewSet):
             oldDepartment.save()
             newDepartment.save()
 
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        meta["status"] = "SUCCESS"
-        meta["result"] = serializer.data
         return Response(meta)
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -202,3 +211,34 @@ def errorPage(request):
 
     return Response(result, status=status.HTTP_404_NOT_FOUND)
 
+@api_view(['GET', 'POST'])
+def login(request):
+
+    if (("matricule" not in request.data) or ("email" not in request.data)):
+        result = {
+            "code": "HTTP_400_BAD_REQUEST",
+            "message": "Only matricule and email attributes are accepted",
+            "status": "FAILURE",
+        }
+        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+        
+    if (request.method=='POST'):
+        matricule = request.data["matricule"]
+        email = request.data["email"]
+
+        voter = None
+        try:
+            voter = Voter.objects.get(matricule=matricule, email=email)
+            result = {
+                "code": "HTTP_200_OK",
+                "login": "SUCCESS",
+                "name": voter.name + " " + voter.surename
+            }
+            return Response(result, status=status.HTTP_200_OK)
+        except:
+            result = {
+                "code": "HTTP_401_UNAUTHORIZED",
+                "login": "FAILED",
+            }
+            return Response(result)
+        
