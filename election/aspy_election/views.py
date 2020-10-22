@@ -40,6 +40,9 @@ class CandidateViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+
+        cand = Candidate.objects.get(matricule=request["matricule"])
+        meta["id"] = cand.id
         meta["status"] = "SUCCESS"
         meta["result"] = serializer.data
 
@@ -148,6 +151,9 @@ class VoterViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+
+        voter = Voter.objects.get(matricule=request["matricule"])
+        meta["id"] = voter.id
         meta["status"] = "SUCCESS"
         meta["result"] = serializer.data
 
@@ -232,7 +238,8 @@ def login(request):
             result = {
                 "code": "HTTP_200_OK",
                 "login": "SUCCESS",
-                "name": voter.name + " " + voter.surename
+                "name": voter.name + " " + voter.surename,
+                "id": voter.id
             }
             return Response(result, status=status.HTTP_200_OK)
         except:
