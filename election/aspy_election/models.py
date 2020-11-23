@@ -41,7 +41,7 @@ class Voter(models.Model):
 
 class Candidate(Voter):
     speech = models.TextField(null=True)
-    image = models.ImageField(null=True)
+    image = models.ImageField(null=True, blank=True, upload_to="images/")
     numberVotes = models.IntegerField(default=0)
     post = models.ForeignKey(Post, on_delete=models.SET_NULL, null=True)
 
@@ -59,3 +59,8 @@ class Data(models.Model):
     name = models.CharField(max_length=50)
     value = models.CharField(max_length=100)
 
+class Aspian(models.Model):
+    matricule = models.CharField(max_length=10, null=False, unique=True)
+
+    def __str__(self):
+        return self.matricule

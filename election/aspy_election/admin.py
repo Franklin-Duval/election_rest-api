@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Data, Department, Candidate, Vote, Voter, Post
+from .models import Data, Department, Candidate, Vote, Voter, Post, Aspian
 
 # Register your models here.
 admin.site.register(Data)
@@ -9,3 +9,4 @@ admin.site.register(Candidate)
 admin.site.register(Vote)
 admin.site.register(Voter)
 admin.site.register(Post)
+admin.site.register(Aspian)

@@ -1,4 +1,5 @@
-from .models import Data, Department, Candidate, Vote, Voter, Post
+from django.db.models import fields
+from .models import Aspian, Data, Department, Candidate, Vote, Voter, Post
 from rest_framework import serializers, permissions
 
 class DataSerializer(serializers.HyperlinkedModelSerializer):
@@ -72,3 +73,10 @@ class VoteSerializer(serializers.HyperlinkedModelSerializer):
             'date'
         ]
 
+class AspianSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Aspian
+        fields = [
+            'id',
+            'matricule'
+        ]

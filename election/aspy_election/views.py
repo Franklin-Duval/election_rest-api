@@ -4,8 +4,8 @@ from rest_framework import status, viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
-from .models import Data, Department, Candidate, Vote, Voter, Post
-from .serializers import DataSerializer, DepartmentSerializer, CandidateSerializer, VoteSerializer, VoterSerializer, PostSerializer
+from .models import Data, Department, Candidate, Vote, Voter, Post, Aspian
+from .serializers import DataSerializer, DepartmentSerializer, CandidateSerializer, VoteSerializer, VoterSerializer, PostSerializer, AspianSerializer
 # Create your views here.
 
 class DataViewSet(viewsets.ModelViewSet):
@@ -24,6 +24,15 @@ class CandidateViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         meta = {}
 
+        #Verify whether voter is an Aspian
+        member = None
+        try:
+            member = Aspian.objects.get(matricule=request.data["matricule"])
+            
+        except:
+            meta["status"] = "FAILURE"
+            return Response(meta, status=status.HTTP_202_ACCEPTED)
+        
         idDept = request.data["department"]
         idDept = idDept[idDept.find("department")+11: ]
         idDept = int(idDept.replace("/", ""))
@@ -41,7 +50,7 @@ class CandidateViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
 
-        cand = Candidate.objects.get(matricule=request["matricule"])
+        cand = Candidate.objects.get(matricule=request.data["matricule"])
         meta["id"] = cand.id
         meta["status"] = "SUCCESS"
         meta["result"] = serializer.data
@@ -70,6 +79,7 @@ class CandidateViewSet(viewsets.ModelViewSet):
         return Response(meta, status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, *args, **kwargs):
+        print("\n\n", request.data, "\n")
         meta = {}
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
@@ -140,6 +150,14 @@ class VoterViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         meta = {}
 
+        #Verify whether voter is an Aspian
+        member = None
+        try:
+            member = Aspian.objects.get(matricule=request.data["matricule"])
+        except:
+            meta["status"] = "FAILURE"
+            return Response(meta, status=status.HTTP_202_ACCEPTED)
+        
         #we increase the number of students in a given department
         idDept = request.data["department"]
         idDept = idDept[idDept.find("department")+11: ]
@@ -151,8 +169,8 @@ class VoterViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-
-        voter = Voter.objects.get(matricule=request["matricule"])
+        
+        voter = Voter.objects.get(matricule=request.data["matricule"])
         meta["id"] = voter.id
         meta["status"] = "SUCCESS"
         meta["result"] = serializer.data
@@ -202,9 +220,16 @@ class VoterViewSet(viewsets.ModelViewSet):
 
         return Response(meta)
 
+
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+
+
+class AspiansViewSet(viewsets.ModelViewSet):
+    queryset = Aspian.objects.all()
+    serializer_class = AspianSerializer
+
 
 @api_view(['GET'])
 def errorPage(request):

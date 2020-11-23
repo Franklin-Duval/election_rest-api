@@ -18,6 +18,9 @@ from django.urls import path, include
 from django.conf.urls import url
 from rest_framework import routers
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 from .aspy_election import views
 
 routers = routers.DefaultRouter()
@@ -27,6 +30,7 @@ routers.register(r'candidate', views.CandidateViewSet)
 routers.register(r'voter', views.VoterViewSet)
 routers.register(r'vote', views.VoteViewSet)
 routers.register(r'post', views.PostViewSet)
+routers.register(r'aspian', views.AspiansViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -35,4 +39,4 @@ urlpatterns = [
     url('auth-login/', views.login),
     url(r'^[a-zA-Z0-9/,;:!\\*-+^$ù&é(-è_çà)]+/$', views.errorPage)
     
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
